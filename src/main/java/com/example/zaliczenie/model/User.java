@@ -7,17 +7,14 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.index.Indexed;
 
 @Document(collection = "users")
+@Getter
+@Setter
 public class User {
     @Id
     @Indexed(unique = true)
     private String id;
-    @Getter
-    @Setter
+    @Indexed(unique = true)
     private String username;
-    @Getter
-    @Setter
     private String password;
-    @Getter
-    @Setter
     private String role;
 }

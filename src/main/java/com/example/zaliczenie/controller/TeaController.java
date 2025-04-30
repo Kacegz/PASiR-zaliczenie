@@ -2,7 +2,10 @@ package com.example.zaliczenie.controller;
 
 import com.example.zaliczenie.model.Tea;
 import com.example.zaliczenie.service.TeaService;
+import com.example.zaliczenie.util.JwtUtil;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,6 +18,7 @@ import java.util.Optional;
 public class TeaController {
 
     private final TeaService teaService;
+    private final JwtUtil jwtUtil;
 
     @GetMapping
     public List<Tea> getAllTeas() {
@@ -29,22 +33,48 @@ public class TeaController {
     }
 
     @PostMapping
-    public Tea createTea(@RequestBody Tea tea) {
+    public Tea createTea(@Valid @RequestBody Tea tea, @RequestHeader("Authorization") String AuthHeader) {
+        String username=jwtUtil.extractUsername(AuthHeader.substring(7));
+        tea.setCreatedBy(username);
         return teaService.createTea(tea);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Tea> updateTea(@PathVariable String id, @RequestBody Tea tea) {
-        try {
-            return ResponseEntity.ok(teaService.updateTea(id, tea));
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
+    public ResponseEntity<Object> updateTea(@Valid @PathVariable String id, @RequestBody Tea tea, @RequestHeader("Authorization") String authHeader) {
+        String username = jwtUtil.extractUsername(authHeader.substring(7));
+        Optional<Tea> existingTea = teaService.getTeaById(id);
+
+        if (existingTea.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Tea not found");
         }
+
+        Tea teaToUpdate = existingTea.get();
+
+        if (!teaToUpdate.getCreatedBy().equals(username)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("user not owner or admin");
+        }
+
+        tea.setId(id);
+        Tea updatedTea = teaService.updateTea(id, tea);
+        return ResponseEntity.ok(updatedTea);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteTea(@PathVariable String id) {
+    public ResponseEntity<String> deleteTea(@PathVariable String id, @RequestHeader("Authorization") String authHeader) {
+        String username = jwtUtil.extractUsername(authHeader.substring(7));
+        Optional<Tea> existingTea = teaService.getTeaById(id);
+
+        if (existingTea.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Tea not found");
+        }
+
+        Tea teaToDelete = existingTea.get();
+
+        if (!teaToDelete.getCreatedBy().equals(username)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User not owner or admin");
+        }
+
         teaService.deleteTea(id);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.status(200).body("Tea Deleted successfully");
     }
 }

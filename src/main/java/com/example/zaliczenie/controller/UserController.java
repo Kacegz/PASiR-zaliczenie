@@ -41,6 +41,7 @@ public class UserController {
         }
         
         user.setPassword(passwordEncoder.encode(user.getPassword()));
+        user.setRole("USER");
         User savedUser = userRepository.save(user);
         
         String token = jwtUtil.generateToken(savedUser.getUsername());
@@ -86,6 +87,7 @@ public class UserController {
             User user = userRepository.findByUsername(username);
             if (user != null) {
                 response.put("username", user.getUsername());
+                response.put("expiration", jwtUtil.extractClaims(token).getExpiration());
                 return ResponseEntity.ok(response);
             } else {
                 response.put("message", "User not found");

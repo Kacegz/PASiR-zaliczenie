@@ -1,28 +1,20 @@
 package com.example.zaliczenie.model;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document(collection = "teas")
+@Getter
+@Setter
 public class Tea {
-
     @Id
     private String id;
-    @Getter
-    @Setter
+    @NotBlank(message = "Name is required")
     private String name;
-    @Setter
-    @Getter
     private String description;
-    @Setter
-    @Getter
     private String origin;
-    @Setter
-    @Getter
-    private int stock;
-    @Setter
-    @Getter
     private String createdBy;
 }
