@@ -94,7 +94,6 @@ public class UserController {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
             }
         } catch (Exception e) {
-            System.out.println(e);
             response.put("message", "Invalid token");
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
         }

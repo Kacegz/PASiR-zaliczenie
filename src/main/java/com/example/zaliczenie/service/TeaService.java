@@ -31,7 +31,6 @@ public class TeaService {
         tea.setName(teaDetails.getName());
         tea.setDescription(teaDetails.getDescription());
         tea.setOrigin(teaDetails.getOrigin());
-        tea.setStock(teaDetails.getStock());
         return teaRepository.save(tea);
     }
 

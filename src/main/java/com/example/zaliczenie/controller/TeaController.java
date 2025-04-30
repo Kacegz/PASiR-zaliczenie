@@ -1,10 +1,13 @@
 package com.example.zaliczenie.controller;
 
 import com.example.zaliczenie.model.Tea;
+import com.example.zaliczenie.model.User;
+import com.example.zaliczenie.repository.UserRepository;
 import com.example.zaliczenie.service.TeaService;
 import com.example.zaliczenie.util.JwtUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,7 +19,8 @@ import java.util.Optional;
 @RequestMapping("/api/teas")
 @RequiredArgsConstructor
 public class TeaController {
-
+    @Autowired
+    private UserRepository userRepository;
     private final TeaService teaService;
     private final JwtUtil jwtUtil;
 
@@ -43,14 +47,17 @@ public class TeaController {
     public ResponseEntity<Object> updateTea(@Valid @PathVariable String id, @RequestBody Tea tea, @RequestHeader("Authorization") String authHeader) {
         String username = jwtUtil.extractUsername(authHeader.substring(7));
         Optional<Tea> existingTea = teaService.getTeaById(id);
-
+        User user = userRepository.findByUsername(username);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User not found");
+        }
         if (existingTea.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Tea not found");
         }
 
         Tea teaToUpdate = existingTea.get();
 
-        if (!teaToUpdate.getCreatedBy().equals(username)) {
+        if (!teaToUpdate.getCreatedBy().equals(username) && !user.getRole().equals("ADMIN")) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("user not owner or admin");
         }
 
@@ -63,17 +70,18 @@ public class TeaController {
     public ResponseEntity<String> deleteTea(@PathVariable String id, @RequestHeader("Authorization") String authHeader) {
         String username = jwtUtil.extractUsername(authHeader.substring(7));
         Optional<Tea> existingTea = teaService.getTeaById(id);
-
         if (existingTea.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Tea not found");
         }
-
+        User user = userRepository.findByUsername(username);
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User not found");
+        }
         Tea teaToDelete = existingTea.get();
 
-        if (!teaToDelete.getCreatedBy().equals(username)) {
+        if (!teaToDelete.getCreatedBy().equals(username) && !user.getRole().equals("ADMIN")) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User not owner or admin");
         }
-
         teaService.deleteTea(id);
         return ResponseEntity.status(200).body("Tea Deleted successfully");
     }
