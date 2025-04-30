@@ -1,6 +1,8 @@
 package com.example.zaliczenie.service;
 
+import com.example.zaliczenie.model.Rating;
 import com.example.zaliczenie.model.Tea;
+import com.example.zaliczenie.repository.RatingRepository;
 import com.example.zaliczenie.repository.TeaRepository;
 import com.example.zaliczenie.exception.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +15,8 @@ import java.util.Optional;
 public class TeaService {
     @Autowired
     private TeaRepository teaRepository;
+    @Autowired
+    private RatingRepository ratingRepository;
 
     public List<Tea> getAllTeas() {
         return teaRepository.findAll();
@@ -37,5 +41,13 @@ public class TeaService {
     public void deleteTea(String id) {
         Tea tea = teaRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Tea not found"));
         teaRepository.delete(tea);
+    }
+    public void updateAverageRating(String teaId) {
+        List<Rating> ratings = ratingRepository.findByTeaId(teaId);
+        double average = ratings.stream().mapToInt(Rating::getScore).average().orElse(0.0);
+
+        Tea tea = teaRepository.findById(teaId).orElseThrow(() -> new RuntimeException("Tea not found"));
+        tea.setAverageRating(average);
+        teaRepository.save(tea);
     }
 }

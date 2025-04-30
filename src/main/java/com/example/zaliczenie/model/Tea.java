@@ -17,4 +17,5 @@ public class Tea {
     private String description;
     private String origin;
     private String createdBy;
+    private double averageRating;
 }
