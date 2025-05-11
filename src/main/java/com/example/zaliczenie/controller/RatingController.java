@@ -57,4 +57,16 @@ public class RatingController {
         List<Rating> ratings = ratingRepository.findByTeaId(id);
         return ResponseEntity.ok(ratings);
     }
+    @GetMapping("/{id}/israted")
+    public ResponseEntity<?> isRated(@PathVariable String id, @RequestHeader("Authorization") String authHeader) {
+        String username = jwtUtil.extractUsername(authHeader.substring(7));
+        User user = userRepository.findByUsername(username);
+
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User not found");
+        }
+
+        boolean isRated = ratingRepository.existsByTeaIdAndUserId(id, user.getId());
+        return ResponseEntity.ok(isRated);
+    }
 }
