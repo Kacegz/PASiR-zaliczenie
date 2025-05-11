@@ -18,7 +18,7 @@ public class Rating {
     private String id;
     private String teaId;
     private String userId;
-    @NotBlank(message = "Must be between 1 and 5")
+    @NotNull(message = "Score is required")
     @Min(1)
     @Max(5)
     private int score;
