@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.util.Optional;
 
 import java.util.List;
 
@@ -57,7 +58,7 @@ public class RatingController {
         List<Rating> ratings = ratingRepository.findByTeaId(id);
         return ResponseEntity.ok(ratings);
     }
-    @GetMapping("/{id}/israted")
+    @GetMapping("/{id}/rated")
     public ResponseEntity<?> isRated(@PathVariable String id, @RequestHeader("Authorization") String authHeader) {
         String username = jwtUtil.extractUsername(authHeader.substring(7));
         User user = userRepository.findByUsername(username);
@@ -66,7 +67,11 @@ public class RatingController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("User not found");
         }
 
-        boolean isRated = ratingRepository.existsByTeaIdAndUserId(id, user.getId());
-        return ResponseEntity.ok(isRated);
+        Optional<Rating> rating = ratingRepository.findByTeaIdAndUserId(id, user.getId());
+        if (rating.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Rating not found");
+        }
+
+        return ResponseEntity.ok(rating.get().getScore());
     }
 }
