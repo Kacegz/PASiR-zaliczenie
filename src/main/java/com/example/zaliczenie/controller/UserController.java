@@ -98,4 +98,30 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
         }
     }
+    @GetMapping("/isadmin")
+    public ResponseEntity<?> isAdmin(@RequestHeader("Authorization") String authHeader) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                response.put("message", "Authorization header is missing or invalid");
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+            }
+
+            String token = authHeader.substring(7);
+            String username = jwtUtil.extractUsername(token);
+
+            User user = userRepository.findByUsername(username);
+            if (user != null) {
+                boolean isAdmin = "ADMIN".equals(user.getRole());
+                response.put("isAdmin", isAdmin);
+                return ResponseEntity.ok(response);
+            } else {
+                response.put("message", "User not found");
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+            }
+        } catch (Exception e) {
+            response.put("message", "Invalid token");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+        }
+    }
 }
